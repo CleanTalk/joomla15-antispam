@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<install version="1.5" type="plugin" group="system" method="upgrade">
+    <name>Antispam by CleanTalk</name>
+    <author>CleanTalk team</author>
+    <creationDate>19.02.2014</creationDate>
+    <copyright>(C) 2013 CleanTalk</copyright>
+    <license>GNU/GPLv2</license>
+    <authorEmail>team@cleantalk.ru</authorEmail>
+    <authorUrl>cleantalk.org</authorUrl>
+    <version>1.70</version>
+    <description>PLG_CLEANTALK_DESCRIPTION</description>
+    <files>
+	<filename plugin="antispambycleantalk">antispambycleantalk.php</filename>
+	<filename plugin="antispambycleantalk">cleantalk.class.php</filename>
+	<filename plugin="antispambycleantalk">JSON.php</filename>
+    </files>
+    <languages folder="languages">
+	<language tag="en-GB">en-GB.plg_system_antispambycleantalk.ini</language>
+	<language tag="en-GB">en-GB.plg_system_antispambycleantalk.sys.ini</language>
+	<language tag="ru-RU">ru-RU.plg_system_antispambycleantalk.ini</language>
+	<language tag="ru-RU">ru-RU.plg_system_antispambycleantalk.sys.ini</language>
+    </languages>
+    
+    <!-- Joomla 1.5 params -->
+    <params>
+	<param name="groups" type="usergroup" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_LABEL" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_DESC" 
+		size="10"
+		multiple="true" 
+		default="29"
+	/>
+	<param name="apikey" type="text" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY_DESC" 
+		size="10" 
+		default="enter key"
+	/>
+	<param name="myspacer" type="spacer" 
+		label=""
+		default="PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY" 
+		description="" 
+	/>
+	<param name="server" type="hidden" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_SERVER" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 
+		size="50" 
+		default="http://moderate.cleantalk.ru" 
+	/>
+    </params>
+
+</install>
