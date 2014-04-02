@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 1.71
+ * @version 1.73
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-171';
+    const ENGINE = 'joomla-173';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -40,9 +40,9 @@ class plgSystemAntispambycleantalk extends JPlugin {
     static $tables_ready = FALSE;
 
     /*
-    * Flag marks signup as proccessed
+    * Flag marked JComments form initilization. 
     */
-    private $ct_signup_proccessed = false;
+    private $JCReady = false;
 
     /**
      * Include in head adn fill form
@@ -330,10 +330,10 @@ class plgSystemAntispambycleantalk extends JPlugin {
                 $document->setBuffer($newContent, 'component');
             }
         }
-        if ($option_cmd == 'com_content' && $view_cmd == 'article') { // JComments 2.3 
+        if ($this->JCReady) { // JComments 2.3 
             $document = JFactory::getDocument();
             $content = $document->getBuffer('component');
-            $needle = '/(<\/form>)/';
+            $needle = '/(<\/div>\s*<\/form>)/';
             $newContent = preg_replace($needle, $this->getJSTest() . ' $1 ', $content);
             $document->setBuffer($newContent, 'component');
         }
@@ -624,6 +624,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $session->set('formtime', time());
         // Disable HTML insertion via hooks, cause the code palaces after the form.
 //        return $this->getJSTest(); // id of JComments form doesn't depends on Joomla version
+        $this->JCReady = true;
         return null; 
     }
 
@@ -991,14 +992,17 @@ class plgSystemAntispambycleantalk extends JPlugin {
         if (isset($_REQUEST['ct_checkjs'])) {
             $config = $this->getCTConfig();
             $checkjs_valid = md5($config['apikey'] . $_SERVER['REMOTE_ADDR']);
-            if ($checkjs_valid == $_REQUEST['ct_checkjs']) {
+            if (!$checkjs_valid)
+                return $checkjs;
+
+            if (preg_match("/$checkjs_valid/", $_REQUEST['ct_checkjs'])) {
                 $checkjs = 1;
             } else {
                 $checkjs = 0;
             }
         }
         $option_cmd = JRequest::getCmd('option');
-            
+       
         // Return null if ct_checkjs is not set, because VirtueMart not need strict JS test
         if (!isset($_REQUEST['ct_checkjs']) && $option_cmd = 'com_virtuemart')
            $checkjs = null; 
