@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 1.73
+ * @version 1.74
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-173';
+    const ENGINE = 'joomla-174';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -333,7 +333,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         if ($this->JCReady) { // JComments 2.3 
             $document = JFactory::getDocument();
             $content = $document->getBuffer('component');
-            $needle = '/(<\/div>\s*<\/form>)/';
+            $needle = '/(<\/form>)/';
             $newContent = preg_replace($needle, $this->getJSTest() . ' $1 ', $content);
             $document->setBuffer($newContent, 'component');
         }
