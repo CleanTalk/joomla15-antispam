@@ -530,7 +530,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         //
         // VirtueMart AskQuestion
         //
-        if ($option_cmd == 'com_virtuemart' && $task_cmd == 'mailAskquestion' && isset($_POST["email"])) {
+        if ($option_cmd == 'com_virtuemart' && ($task_cmd == 'mailAskquestion' || $page_cmd == 'shop.ask') && isset($_POST["email"])) {
             $contact_email = $_POST["email"];
             
             if (isset($_POST["comment"])) {
