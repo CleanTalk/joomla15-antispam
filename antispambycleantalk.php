@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 1.76
+ * @version 1.77
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-176';
+    const ENGINE = 'joomla-177';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -41,6 +41,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 
     /*
     * Flag marked JComments form initilization. 
+
     */
     private $JCReady = false;
     
@@ -318,7 +319,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $session->clear('formtime'); // clear session 'formtime'
     }
 
-    function sendAdminEmail($subject, $message) {
+    function sendAdminEmail($subject, $message, $is_html = false) {
         $app = JFactory::getApplication();
         
         $mail = JFactory::getMailer();
@@ -326,6 +327,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $mail->setSender(array($app->getCfg('mailfrom'), $app->getCfg('fromname')));
         $mail->setSubject($subject);
         $mail->setBody($message);
+        $mail->isHTML($is_html);
         $sent = $mail->Send();
     }
 
@@ -359,7 +361,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             }
         }
         if ($this->JCReady) { // JComments 2.3 
-            $this->getJSTest('/(<\/form>)/');
+            $this->getJSTest('/(<form id="comments-form" name="comments-form" action="javascript:void\(null\)\;">)/', true);
         }
         if ($option_cmd == 'com_user' || $option_cmd == 'com_users') {
             $this->getJSTest('/(<\/form>)/');
@@ -705,6 +707,12 @@ class plgSystemAntispambycleantalk extends JPlugin {
                     } else if ($ctResponse['allow'] == 0) {
                         $comment->published = false;
                         $comment->comment = self::$CT->addCleantalkComment($comment->comment, $ctResponse['comment']);
+                        
+                        $config = $this->getCTConfig();
+                        // Send notification to administrator
+                        if ($config['jcomments_unpublished_nofications'] != '') {
+                            JComments::sendNotification($comment, true);
+                        }
                     }
                 }
                 return true;
@@ -869,14 +877,17 @@ class plgSystemAntispambycleantalk extends JPlugin {
             
         $config['apikey'] = ''; 
         $config['server'] = '';
+        $config['jcomments_unpublished_nofications'] = '';
         if (class_exists('JParameter')) {   //1.5
             $jparam = new JParameter($plugin->params);
             $config['apikey'] = $jparam->def('apikey', '');
             $config['server'] = $jparam->def('server', '');
+            $config['jcomments_unpublished_nofications'] = $jparam->def('jcomments_unpublished_nofications', '');
         } else {      //1.6+
             $jreg = new JRegistry($plugin->params);
             $config['apikey'] = $jreg->get('apikey', '');
             $config['server'] = $jreg->get('server', '');
+            $config['jcomments_unpublished_nofications'] = $jreg->get('jcomments_unpublished_nofications', '');
         }
 
         return $config;
@@ -1003,7 +1014,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
      * @return null 
      * @since 1.5
      */
-    function getJSTest($needle = null) {
+    function getJSTest($needle = null, $after = false) {
         if (!$needle)
             return null;
 
@@ -1012,19 +1023,30 @@ class plgSystemAntispambycleantalk extends JPlugin {
         } catch (Exception $e) {
             $ct_checkjs_key = 1;
         }
-    	
+        
         $field_id = 'ct_checkjs_' . md5(rand(0, 1000));
 
         $str = '<input type="hidden" id="' . $field_id . '" name="ct_checkjs" value="' . self::CT_CHECKJS_DEF . '" />'. "\n";
         $str .= '<script type="text/javascript">'. "\n";
         $str .= '// <![CDATA['. "\n";
         $str .= 'document.getElementById("'. $field_id .'").value = document.getElementById("'. $field_id .'").value.replace(/^' . self::CT_CHECKJS_DEF . '$/, "' . $ct_checkjs_key . '");'. "\n";
+        $str .= 'console.log(document.getElementById("'. $field_id .'").value);'. "\n";
         $str .= '// ]]>'. "\n";
         $str .= '</script>'. "\n";
         
         $document = JFactory::getDocument();
         $content = $document->getBuffer('component');
-        $newContent = preg_replace($needle, $str . ' $1 ', $content);
+        
+        //
+        // Code position 
+        //
+        if ($after) {
+            $str = '$1 ' . $str;
+        } else {
+            $str = $str . ' $1'; 
+        }
+        
+        $newContent = preg_replace($needle, $str, $content);
         $document->setBuffer($newContent, 'component');
       
         return null;

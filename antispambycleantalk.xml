@@ -2,12 +2,12 @@
 <install version="1.5" type="plugin" group="system" method="upgrade">
     <name>Antispam by CleanTalk</name>
     <author>CleanTalk team</author>
-    <creationDate>19.05.2014</creationDate>
+    <creationDate>03.07.2014</creationDate>
     <copyright>(C) CleanTalk</copyright>
     <license>GNU/GPLv2</license>
     <authorEmail>welcome@cleantalk.org</authorEmail>
     <authorUrl>cleantalk.org</authorUrl>
-    <version>1.76</version>
+    <version>1.77</version>
     <description>PLG_CLEANTALK_DESCRIPTION</description>
     <files>
 	<filename plugin="antispambycleantalk">antispambycleantalk.php</filename>
@@ -45,8 +45,13 @@
 		label="PLG_SYSTEM_CLEANTALK_PARAM_SERVER" 
 		description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 
 		size="50" 
-		default="http://moderate.cleantalk.ru" 
+		default="http://moderate.cleantalk.org" 
 	/>
+    <param name="jcomments_unpublished_nofications" type="radio" default="0" 
+            label="COM_PLUGINS_JCOMMENTS_NOTIFY_NEW_UNPUBLISHED" description="Show/Hide author copyright.">
+        <option value="0">NO</option>
+        <option value="1">YES</option>
+    </param>
     </params>
 
 </install>
