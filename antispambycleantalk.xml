@@ -2,12 +2,12 @@
 <install version="1.5" type="plugin" group="system" method="upgrade">
     <name>Antispam by CleanTalk</name>
     <author>CleanTalk team</author>
-    <creationDate>21.08.2014</creationDate>
+    <creationDate>12.09.2014</creationDate>
     <copyright>(C) CleanTalk</copyright>
     <license>GNU/GPLv2</license>
     <authorEmail>welcome@cleantalk.org</authorEmail>
     <authorUrl>cleantalk.org</authorUrl>
-    <version>2.1</version>
+    <version>2.3</version>
     <description>PLG_CLEANTALK_DESCRIPTION</description>
     <files>
 	<filename plugin="antispambycleantalk">antispambycleantalk.php</filename>
@@ -41,6 +41,13 @@
 		default="PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY" 
 		description="" 
 	/>
+
+    <param name="general_contact_forms_test" type="radio" default="0" 
+            label="COM_PLUGINS_CT_CUSTOM_FORMS" description="">
+        <option value="0">NO</option>
+        <option value="1">YES</option>
+    </param>
+ 
 	<param name="server" type="hidden" 
 		label="PLG_SYSTEM_CLEANTALK_PARAM_SERVER" 
 		description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 

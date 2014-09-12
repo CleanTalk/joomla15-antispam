@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 2.1
+ * @version 2.3
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-21';
+    const ENGINE = 'joomla-23';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -284,20 +284,21 @@ class plgSystemAntispambycleantalk extends JPlugin {
         }
 
         $ver = new JVersion();
-        // constants can be found in components/com_contact/views/contact/tmpl/default_form.php
+        // Converts $data Array into an Object
+        $obj = new JObject($data);
+        // sets 'sender_email' ONLY if not already set. Also checks to see if 'email' was not provided instead
+        $obj->def('sender_email',$obj->get('email',$obj->get('contact_email',null)));
+        // sets 'sender_nickname' ONLY if not already set. Also checks to see if 'name' was not provided instead
+        $obj->def('sender_nickname',$obj->get('name',$obj->get('contact_name',null)));
+        // sets 'message' ONLY if not already set. Also checks to see if 'comment' was not provided instead
+        $obj->def('subject',$obj->get('subject',$obj->get('contact_subject',null)));
+        // sets 'message' ONLY if not already set. Also checks to see if 'comment' was not provided instead
+        $obj->def('message',$obj->get('text',$obj->get('contact_message',null)));
+
         if (strcmp($ver->RELEASE, '1.5') <= 0) {  // 1.5 and lower
-            $user_name_key = 'name';
-            $user_email_key = 'email';
-            $subject_key = 'subject';
-            $message_key = 'text';
             $sendAlarm = TRUE;
-        } else {      // current higest version by default ('2.5' now)
-            $user_name_key = 'contact_name';
-            $user_email_key = 'contact_email';
-            $subject_key = 'contact_subject';
-            $message_key = 'contact_message';
         }
-        
+
         $post_info['comment_type'] = 'feedback';
         $post_info = json_encode($post_info);
         if ($post_info === false)
@@ -306,11 +307,11 @@ class plgSystemAntispambycleantalk extends JPlugin {
         self::getCleantalk();
         $ctResponse = self::ctSendRequest(
             'check_message', array(
-                'example' => null, 
-                'sender_nickname' => $data[$user_name_key],
-                'sender_email' => $data[$user_email_key],
+                'example' => null,
+                'sender_nickname' => $obj->get('sender_nickname'),
+                'sender_email' => $obj->get('sender_email'),
                 'sender_ip' => self::$CT->ct_session_ip($_SERVER['REMOTE_ADDR']),
-                'message' => $data[$subject_key] . "\n" . $data[$message_key],
+                'message' => $obj->get('subject') . "\n" . $obj->get('message'),
                 'js_on' => $checkjs,
                 'submit_time' => $submit_time,
                 'post_info' => $post_info,
@@ -550,23 +551,31 @@ class plgSystemAntispambycleantalk extends JPlugin {
             }
         }
 
-        if ($contact_email !== null){
-            self::getCleantalk();
-            $ctResponse = self::ctSendRequest(
-                'check_message', array(
-                    'message' => $contact_message, 
-                    'sender_email' => $contact_email, 
-                    'sender_ip' => self::$CT->ct_session_ip($_SERVER['REMOTE_ADDR']),
-                    'sender_nickname' => $contact_nickname, 
-                    'js_on' => $checkjs,
-                    'post_info' => $post_info,
-                    'submit_time' => $submit_time,
-                )
-            );
-            if (isset($ctResponse) && is_array($ctResponse)) {
-                if ($ctResponse['allow'] == 0) {
-                    JError::raiseError(503, $ctResponse['comment']);
+        if (!$contact_email && $_SERVER['REQUEST_METHOD'] == 'POST' 
+            && $option_cmd != 'com_jcomments' && $option_cmd != 'com_contact' && $option_cmd != 'com_users'
+            ) {
+            $config = $this->getCTConfig();
+            
+            if ($config['general_contact_forms_test'] != '') {
+                foreach ($_POST as $v) {
+                    if ($this->validEmail($v)) {
+                        $contact_email = $v;
+                    }
                 }
+            }
+        }
+
+        if ($contact_email !== null){
+            $result = $this->onSpamCheck(
+                '',
+                array(
+                    'sender_email' => $contact_email, 
+                    'sender_nickname' => $contact_nickname, 
+                    'message' => $contact_message
+                ));
+
+            if ($result !== true) {
+                JError::raiseError(503, $this->_subject->getError());
             }
         }
 
@@ -692,7 +701,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
                     
                     $example = $baseText . "\n\n\n\n" . $prevComments;
                 }
-
+                error_log('JC');
                 self::getCleantalk();
                 $ctResponse = self::ctSendRequest(
                     'check_message', array(
@@ -884,18 +893,21 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $config['apikey'] = ''; 
         $config['server'] = '';
         $config['jcomments_unpublished_nofications'] = '';
+        $config['general_contact_forms_test'] = '';
         $config['relevance_test'] = '';
         if (class_exists('JParameter')) {   //1.5
             $jparam = new JParameter($plugin->params);
             $config['apikey'] = $jparam->def('apikey', '');
             $config['server'] = $jparam->def('server', '');
             $config['jcomments_unpublished_nofications'] = $jparam->def('jcomments_unpublished_nofications', '');
+            $config['general_contact_forms_test'] = $jparam->def('general_contact_forms_test', '');
             $config['relevance_test'] = $jparam->def('relevance_test', '');
         } else {      //1.6+
             $jreg = new JRegistry($plugin->params);
             $config['apikey'] = $jreg->get('apikey', '');
             $config['server'] = $jreg->get('server', '');
             $config['jcomments_unpublished_nofications'] = $jreg->get('jcomments_unpublished_nofications', '');
+            $config['general_contact_forms_test'] = $jreg->get('general_contact_forms_test', '');
             $config['relevance_test'] = $jreg->get('relevance_test', '');
         }
 
@@ -1102,6 +1114,10 @@ ctSetCookie("%s", "%s");
      * @since 1.5
      */
     function validEmail($string) {
+        if (!isset($string) || !is_string($string)) {
+            return false;
+        }
+
         return preg_match("/^\S+@\S+$/i", $string); 
     }
     
@@ -1160,6 +1176,65 @@ ctSetCookie("%s", "%s");
         }
         
         return $result;
-}
+    }
+
+	 /**
+	 * Does the CleanTalk Magic and Throws error message if message is not allowed
+	 * @param	string	$context	The context of the content being passed to the plugin. Usually component.view (example: com_contactenhanced.contact)
+	 * @param	array	$data		Containing all required data ($sender_email, $sender_nickname,$message)
+	 * @return 	boolean True if passes validation OR false if it fails
+	 */
+	public function onSpamCheck($context='', $data){
+		// Converts $data Array into an Object
+		$obj = new JObject($data);
+		// sets 'sender_email' ONLY if not already set. Also checks to see if 'email' was not provided instead
+		$obj->def('sender_email',$obj->get('email',null));
+		// sets 'sender_nickname' ONLY if not already set. Also checks to see if 'name' was not provided instead
+		$obj->def('sender_nickname',$obj->get('name',null));
+		// sets 'message' ONLY if not already set. Also checks to see if 'comment' was not provided instead
+		$obj->def('message',$obj->get('comment',null));
+
+		$session = JFactory::getSession();
+		$submit_time = $this->submit_time_test();
+	
+		$checkjs = $this->get_ct_checkjs(true);
+	
+		$sender_info = $this->get_sender_info();
+		$sender_info = json_encode($sender_info);
+		if ($sender_info === false) {
+			$sender_info = '';
+		}
+
+		// gets 'comment_type' from $data. If not se it will use 'event_message'
+		$post_info['comment_type'] = $obj->get('comment_type','event_message');
+		$post_info['post_url'] = $session->get($this->current_page);
+		$post_info = json_encode($post_info);
+		if ($post_info === false) {
+			$post_info = '';
+		}
+	
+		self::getCleantalk();
+		$ctResponse = self::ctSendRequest(
+				'check_message', array(
+						'message' => $obj->get('message'),
+						'sender_email' => $obj->get('sender_email'),
+						'sender_ip' => self::$CT->ct_session_ip($_SERVER['REMOTE_ADDR']),
+						'sender_nickname' => $obj->get('sender_nickname'),
+						'js_on' => $checkjs,
+						'post_info' => $post_info,
+						'submit_time' => $submit_time,
+                        'sender_info' => $sender_info 
+				)
+		);
+
+		if (!empty($ctResponse['allow']) AND $ctResponse['allow'] == 1) {
+			return true;
+		} else {
+			// records error message in dispatcher (and let the event caller handle)
+			$this->_subject->setError($ctResponse['comment']);
+			return false;
+		}
+	}
+
 
 }
