@@ -631,7 +631,6 @@ class plgSystemAntispambycleantalk extends JPlugin {
                 array_push($user_groups, $user->gid);
             }
         }
-        error_log(print_r($config['relevance_test'], true)); 
         foreach ($user_groups as $group) {
             if (in_array($group, $plugin_groups)) {
                 
@@ -663,7 +662,6 @@ class plgSystemAntispambycleantalk extends JPlugin {
                     
                     $example = $baseText . "\n\n\n\n" . $prevComments;
                 }
-                error_log('JC');
                 self::getCleantalk();
                 $ctResponse = self::ctSendRequest(
                     'check_message', array(
