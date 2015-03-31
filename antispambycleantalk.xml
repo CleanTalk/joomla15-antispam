@@ -2,17 +2,20 @@
 <install version="1.5" type="plugin" group="system" method="upgrade">
     <name>Antispam by CleanTalk</name>
     <author>CleanTalk team</author>
-    <creationDate>29.12.2014</creationDate>
+    <creationDate>31.03.2015</creationDate>
     <copyright>(C) CleanTalk</copyright>
     <license>GNU/GPLv2</license>
     <authorEmail>welcome@cleantalk.org</authorEmail>
     <authorUrl>cleantalk.org</authorUrl>
-    <version>2.6</version>
+    <version>3.1</version>
     <description>PLG_CLEANTALK_DESCRIPTION</description>
     <files>
 	<filename plugin="antispambycleantalk">antispambycleantalk.php</filename>
 	<filename plugin="antispambycleantalk">cleantalk.class.php</filename>
 	<filename plugin="antispambycleantalk">JSON.php</filename>
+	<filename plugin="antispambycleantalk">cleantalk.js</filename>
+	<filename plugin="antispambycleantalk">jquery-1.11.2.min.js</filename>
+	<filename plugin="antispambycleantalk">preloader.gif</filename>
     </files>
     <languages folder="languages">
 	<language tag="en-GB">en-GB.plg_system_antispambycleantalk.ini</language>
@@ -36,13 +39,25 @@
 		size="10" 
 		default="enter key"
 	/>
+	<param name="autokey" type="spacer" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_AUTOKEY"
+		default="PLG_SYSTEM_CLEANTALK_PARAM_AUTOKEY"
+	/>
+	<param name="reg_notice" type="spacer" 
+		label=""
+		default="PLG_SYSTEM_CLEANTALK_PARAM_NOTICE"
+	/>
+	<param name="notice" type="spacer" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_LICENSE"
+		default="PLG_SYSTEM_CLEANTALK_PARAM_LICENSE"
+	/>
 	<param name="myspacer" type="spacer" 
 		label=""
 		default="PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY" 
 		description="" 
 	/>
 
-    <param name="general_contact_forms_test" type="radio" default="0" 
+    <param name="general_contact_forms_test" type="radio" default="1" 
             label="COM_PLUGINS_CT_CUSTOM_FORMS" description="">
         <option value="0">NO</option>
         <option value="1">YES</option>
@@ -53,6 +68,12 @@
 		description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 
 		size="50" 
 		default="http://moderate.cleantalk.org" 
+	/>
+	<param name="user_token" type="hidden" 
+		label="user_token" 
+		description="user_token" 
+		size="50" 
+		default="" 
 	/>
     <param name="jcomments_unpublished_nofications" type="radio" default="0" 
             label="COM_PLUGINS_JCOMMENTS_NOTIFY_NEW_UNPUBLISHED" description="Show/Hide author copyright.">
