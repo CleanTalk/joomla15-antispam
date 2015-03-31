@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 2.6
+ * @version 3.1
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-26';
+    const ENGINE = 'joomla15';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -102,7 +102,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     public function plgSystemAntispambycleantalk (&$subject, $config) {
         parent::__construct($subject, $config);
     }
-
+    
     /**
      * This event is triggered before an update of a user record.
      * @access public
@@ -128,14 +128,224 @@ class plgSystemAntispambycleantalk extends JPlugin {
 
         return null;
     }
+    
+    /*
+    exception for MijoShop ajax calls
+    */
+    public function exceptionMijoShop()
+    {
+    	if(@$_GET['option']=='com_mijoshop' && @$_GET['route']=='api/customer')
+    	{
+    		return false;
+    	}
+    	else
+    	{
+    		return true;
+    	}
+    }
+    
+	public function onExtensionBeforeSave($name, $data)
+    {
+    	$config = $this->getCTConfig();
+    	$new_config=json_decode($data->params);
+    	if($new_config->apikey!=$config['apikey']&&trim($new_config->apikey)!=''&&$new_config->apikey!='enter key')
+    	{
+    		if (function_exists('curl_init') && function_exists('json_decode'))
+    		{
+    			$url = 'http://moderate.cleantalk.org/api2.0';
+	    		$dt=Array(
+	    			'auth_key'=>$new_config->apikey,
+	    			'method_name'=> 'check_message',
+	    			'message'=>'CleanTalk connection test',
+	    			'example'=>null,
+	    			'agent'=>'joomla15',
+	    			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
+	    			'sender_email'=>'stop_email@example.com',
+	    			'sender_nickname'=>'CleanTalk',
+	    			'js_on'=>1);
+	    		if (function_exists('curl_init') && function_exists('json_decode'))
+	    		{
+	    			$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $url);
+					curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+					curl_setopt($ch, CURLOPT_POST, true);
+					curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dt));
+					
+					// receive server response ...
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+					// resolve 'Expect: 100-continue' issue
+					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+					
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+					
+					$result = curl_exec($ch);
+					curl_close($ch);
+	    		}
+	    		else
+	    		{
+	    			$opts = array(
+					    'http'=>array(
+					        'method'=>"POST",
+					        'content'=>json_encode($dt))
+					);
+		    		$context = stream_context_create($opts);
+		    		$result = @file_get_contents("http://moderate.cleantalk.org/api2.0", 0, $context);
+	    		}
+    		}
+    	}
+    }
+    
+    /**
+     * This event is triggered after Joomla initialization
+     * Joomla 1.5
+     * @access public
+     */
+    
+	public function onAfterInitialise()
+    {
+    	if(isset($_POST['params']) && isset($_POST['params']['apikey']) && isset($_POST['params']['general_contact_forms_test']) && isset($_POST['params']['server']) && isset($_POST['option']) && isset($_POST['task']) ) //"trigger" on plugin settings saving
+    	{
+    		
+    		$config = $this->getCTConfig();
+	    	$new_config=$_POST['params'];
+	    	if($new_config['apikey']!=$config['apikey']&&trim($new_config['apikey'])!=''&&$new_config['apikey']!='enter key')
+	    	{
+	    		if (function_exists('curl_init') && function_exists('json_decode'))
+	    		{
+	    			$url = 'http://moderate.cleantalk.org/api2.0';
+		    		$dt=Array(
+		    			'auth_key'=>$new_config['apikey'],
+		    			'method_name'=> 'check_message',
+		    			'message'=>'CleanTalk connection test',
+		    			'example'=>null,
+		    			'agent'=>'joomla15',
+		    			'sender_ip'=>$_SERVER['REMOTE_ADDR'],
+		    			'sender_email'=>'stop_email@example.com',
+		    			'sender_nickname'=>'CleanTalk',
+		    			'js_on'=>1);
+		    		if (function_exists('curl_init') && function_exists('json_decode'))
+		    		{
+		    			$ch = curl_init();
+						curl_setopt($ch, CURLOPT_URL, $url);
+						curl_setopt($ch, CURLOPT_TIMEOUT, $ct_server_timeout);
+						curl_setopt($ch, CURLOPT_POST, true);
+						curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($dt));
+						
+						// receive server response ...
+						curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+						// resolve 'Expect: 100-continue' issue
+						curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+						
+						curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+						curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+						
+						$result = curl_exec($ch);
+						curl_close($ch);
+		    		}
+		    		else
+		    		{
+		    			$opts = array(
+						    'http'=>array(
+						        'method'=>"POST",
+						        'content'=>json_encode($dt))
+						);
+			    		$context = stream_context_create($opts);
+			    		$result = @file_get_contents("http://moderate.cleantalk.org/api2.0", 0, $context);
+		    		}
+	    		}
+	    	}
+    	}
+		if(isset($_POST['get_auto_key'])&&$_POST['get_auto_key']==='yes')
+		{
+			$config =& JFactory::getConfig();
+			$adminmail=$config->_registry['config']['data']->mailfrom;
+			if(function_exists('curl_init') && function_exists('json_decode'))
+			{
+				$url = 'https://api.cleantalk.org';
+				$data = array();
+				$data['method_name'] = 'get_api_key'; 
+				$data['email'] = $adminmail;
+				$data['website'] = $_SERVER['HTTP_HOST'];
+				$data['platform'] = 'joomla15';
+				
+				if (function_exists('curl_init') && function_exists('json_decode'))
+	    		{
+	    			$ch = curl_init();
+					curl_setopt($ch, CURLOPT_URL, $url);
+					curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+					curl_setopt($ch, CURLOPT_POST, true);
+					curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));
+					
+					// receive server response ...
+					curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+					// resolve 'Expect: 100-continue' issue
+					curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+					
+					curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+					curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+					
+					$result = curl_exec($ch);
+					curl_close($ch);
+	    		}
+	    		else
+	    		{
+	    			$opts = array(
+					    'http'=>array(
+					        'method'=>"POST",
+					        'content'=>http_build_query($data))
+					);
+		    		$context = stream_context_create($opts);
+		    		$result = @file_get_contents("http://moderate.cleantalk.org/api2.0", 0, $context);
+	    		}
+				
+				if ($result)
+				{
+					$result = json_decode($result, true);
+					if (isset($result['data']) && is_array($result['data']))
+					{
+						$result = $result['data'];
+					}
+				}
+				print json_encode($result);
+				die();
+			}
+		}
+    }
 
     /**
      * Save user registration request_id
      * @access public
      * @return type
      */
-    public function onBeforeCompileHead() {
-        $app = JFactory::getApplication();
+    public function onBeforeCompileHead()
+    {
+    	$app = JFactory::getApplication();
+    	if($app->isAdmin())
+    	{
+	    	$document = JFactory::getDocument();
+			$document->addScript(Juri::root()."plugins/system/jquery-1.11.2.min.js");
+			$document->addScriptDeclaration("jQuery.noConflict();");
+			
+			
+			$config =& JFactory::getConfig();
+			$adminmail=$config->_registry['config']['data']->mailfrom;
+			$document->addScriptDeclaration('var cleantalk_domain="'.$_SERVER['HTTP_HOST'].'";
+				var cleantalk_mail="'.$adminmail.'";
+				var ct_register_message="'.JText::_('PLG_SYSTEM_CLEANTALK_REGISTER_MESSAGE').$adminmail.'";
+				var ct_register_error="'.addslashes(JText::_('PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY')).'";
+				var ct_register_notice="'.JText::_('PLG_SYSTEM_CLEANTALK_PARAM_NOTICE1').$adminmail.JText::_('PLG_SYSTEM_CLEANTALK_PARAM_NOTICE2').'";
+			');
+			$document->addStyleDeclaration('.cleantalk_auto_key{-webkit-border-bottom-left-radius: 5px;-webkit-border-bottom-right-radius: 5px;-webkit-border-radius: 5px;-webkit-border-top-left-radius: 5px;-webkit-border-top-right-radius: 5px;background: #3399FF;border-radius: 5px;box-sizing: border-box;color: #FFFFFF;font: normal normal 400 14px/16.2px "Open Sans";padding:3px;border:0px none;cursor:pointer;}');
+			
+			$document->addScript(Juri::root()."plugins/system/cleantalk.js");
+			
+			$plugin = JPluginHelper::getPlugin('system', 'antispambycleantalk');
+			$jparam = new JParameter($plugin->params);
+			$document->addScriptDeclaration('var ct_user_token="'.$jparam->def('user_token','').'";');
+			$document->addScriptDeclaration('var ct_stat_link="'.JText::_('PLG_SYSTEM_CLEANTALK_STATLINK').'";');
+		}
+		
         if ($app->isAdmin())
             return;
 
@@ -474,7 +684,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             }
         }
 
-        if ($contact_email !== null && !$app->isAdmin()){
+        if ($contact_email !== null && !$app->isAdmin() &&exceptionMijoShop()){
 
             $result = $this->onSpamCheck(
                 '',
@@ -983,6 +1193,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $config['jcomments_unpublished_nofications'] = '';
         $config['general_contact_forms_test'] = '';
         $config['relevance_test'] = '';
+        $config['user_token'] = '';
         if (class_exists('JParameter')) {   //1.5
             $jparam = new JParameter($plugin->params);
             $config['apikey'] = $jparam->def('apikey', '');
@@ -990,6 +1201,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             $config['jcomments_unpublished_nofications'] = $jparam->def('jcomments_unpublished_nofications', '');
             $config['general_contact_forms_test'] = $jparam->def('general_contact_forms_test', '');
             $config['relevance_test'] = $jparam->def('relevance_test', '');
+            $config['user_token'] = $jparam->def('user_token', '');
         } else {      //1.6+
             $jreg = new JRegistry($plugin->params);
             $config['apikey'] = $jreg->get('apikey', '');
@@ -997,6 +1209,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             $config['jcomments_unpublished_nofications'] = $jreg->get('jcomments_unpublished_nofications', '');
             $config['general_contact_forms_test'] = $jreg->get('general_contact_forms_test', '');
             $config['relevance_test'] = $jreg->get('relevance_test', '');
+            $config['user_token'] = $jreg->get('user_token', '');
         }
 
         return $config;
