@@ -1,3 +1,22 @@
+var close_animate=true;
+function animate_banner(to)
+{
+	if(close_animate)
+	{
+		if(to==0.3)
+		{
+			jQuery('#feedback_notice').fadeTo(300,to,function(){
+				animate_banner(1)
+			});
+		}
+		else
+		{
+			jQuery('#feedback_notice').fadeTo(300,to,function(){
+				animate_banner(0.3)
+			});
+		}
+	}
+}
 jQuery(document).ready(function(){
 	jQuery('#cleantalk_manual_key').attr('href', 'https://cleantalk.org/register?platform=joomla15&email=' + cleantalk_mail + '&website=' + cleantalk_domain);
 	var ct_auth_key=jQuery('#paramsapikey').prop('value');
@@ -11,7 +30,33 @@ jQuery(document).ready(function(){
 		jQuery('#cleantalk_manual_key').attr('href', 'https://cleantalk.org/my?user_token='+ct_user_token);
 		jQuery('#cleantalk_manual_key').html(ct_stat_link);
 	}
+	if(ct_show_feedback)
+	{
+		if(jQuery('#system-message').length==0)
+		{
+			jQuery('#element-box').before('<dl id="system-message"></dl>');
+		}
+		jQuery('#system-message').prepend('<dd class="notice message fade" id="feedback_notice"><a href="#" style="font-size:15px;float:right;margin:6px;text-decoration:none;" id="feedback_notice_close">X</a><ul><li style="text-align:center;">'+ct_show_feedback_mes+'</li></ul></dd>');
+	}
 	
+	jQuery('#feedback_notice_close').click(function(){
+		var data = {
+			'ct_delete_notice': 'yes'
+		};		
+		jQuery.ajax({
+			type: "POST",
+			url: location.href,
+			data: data,
+			success: function(msg){
+				//alert(msg);
+				close_animate=false;
+				jQuery('#feedback_notice').hide();
+			}
+		});
+	});
+	jQuery('#feedback_notice_close').click(function(){
+		animate_banner(0.3);
+	});
 	
 	jQuery('.cleantalk_auto_key').click(function(){
 		var data = {
