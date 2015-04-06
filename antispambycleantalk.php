@@ -3,11 +3,11 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.1
+ * @version 3.2
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.ru) 
- * @copyright (C) 2013 Сleantalk team (http://cleantalk.org)
+ * @copyright (C) 2015 Сleantalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  *
  */
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-31';
+    const ENGINE = 'joomla-32';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -196,6 +196,130 @@ class plgSystemAntispambycleantalk extends JPlugin {
     	}
     }
     
+    /*
+    * Send custom request to CleanTalk server
+    */
+    
+    private function sendRequest($url,$data,$isJSON)
+    {
+    	$result=null;
+    	if(!$isJSON)
+		{
+			$data=http_build_query($data);
+		}
+		else
+		{
+			$data= json_encode($data);
+		}
+    	if (function_exists('curl_init') && function_exists('json_decode'))
+		{
+		
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_TIMEOUT, 5);
+			curl_setopt($ch, CURLOPT_POST, true);
+			curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+			
+			// receive server response ...
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+			// resolve 'Expect: 100-continue' issue
+			curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect:'));
+			
+			curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+			curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, false);
+			
+			$result = curl_exec($ch);
+			curl_close($ch);
+		}
+		else
+		{
+			$opts = array(
+			    'http'=>array(
+			        'method'=>"POST",
+			        'content'=>$data)
+			);
+    		$context = stream_context_create($opts);
+    		$result = @file_get_contents($url, 0, $context);
+		}
+		return $result;
+    }
+    
+    /*
+    * Checks if auth_key is paid or not
+    */
+    
+    private function checkIsPaid()
+    {
+    	$id=0;
+    	$id=$this->getId('system','antispambycleantalk');
+    	
+    	if($id!==0)
+    	{
+    		$table = JTable::getInstance( 'plugin');
+    		$table->load($id);
+    		
+			$plugin = JPluginHelper::getPlugin('system', 'antispambycleantalk');
+			$jparam = new JParameter($plugin->params);
+			$last_checked=$jparam->def('last_checked', 0);
+			$new_checked=time();
+			$last_status=intval($jparam->def('last_status', -1));
+			$api_key=$jparam->def('apikey', '');
+			$show_notice=$jparam->def('show_notice', 0);
+			if($api_key!=''&&$api_key!='enter key')
+			{
+				$new_status=$last_status;
+				
+				if($new_checked-$last_checked>10)
+				{
+					$url = 'https://api.cleantalk.org';
+		    		$dt=Array(
+		    			'auth_key'=>$api_key,
+		    			'method_name'=> 'get_account_status');
+		    		$result=$this->sendRequest($url,$dt,false);
+		    		//print $result;
+		    		if($result!==null)
+		    		{
+		    			$result=json_decode($result);
+		    			if(isset($result->data)&&isset($result->data->paid))
+		    			{
+		    				$new_status=intval($result->data->paid);
+		    				if($last_status!=1&&$new_status==1)
+		    				{
+		    					$show_notice=1;
+		    					//set notice
+		    				}
+		    			}
+		    		}
+		    		$params   = new JParameter($table->params);
+					$params->set('last_checked',$new_checked);
+					$params->set('last_status',$new_status);
+					$params->set('show_notice',$show_notice);
+					$table->params = $params->toString();
+					$table->store();
+				}
+			}
+    	}
+    }
+    
+    /*
+    * Get id of CleanTalk extension
+    */
+    
+    private function getId($folder,$name)
+	{
+		$db=&JFactory::getDBO();
+		$sql='SELECT `id` FROM `#__plugins` WHERE `folder`="'.$db->getEscaped($folder).'" AND `element`="'.$db->getEscaped($name).'"';
+		$db->setQuery($sql);
+		if(!($plg=$db->loadObject()))
+		{
+			return 0;
+		}
+		else
+		{
+			return (int)$plg->id;
+		}
+	}
+    
     /**
      * This event is triggered after Joomla initialization
      * Joomla 1.5
@@ -204,6 +328,12 @@ class plgSystemAntispambycleantalk extends JPlugin {
     
 	public function onAfterInitialise()
     {
+    	$app = JFactory::getApplication();
+    	if($app->isAdmin())
+    	{
+    		$this->checkIsPaid();
+    	}
+
     	if(isset($_POST['params']) && isset($_POST['params']['apikey']) && isset($_POST['params']['general_contact_forms_test']) && isset($_POST['params']['server']) && isset($_POST['option']) && isset($_POST['task']) ) //"trigger" on plugin settings saving
     	{
     		
@@ -256,6 +386,20 @@ class plgSystemAntispambycleantalk extends JPlugin {
 	    		}
 	    	}
     	}
+    	if(isset($_POST['ct_delete_notice'])&&$_POST['ct_delete_notice']==='yes')
+    	{
+    		$id=$this->getId('system','antispambycleantalk');
+    		if($id!==0)
+    		{
+    			$table = JTable::getInstance( 'plugin');
+    			$table->load($id);
+    			$params   = new JParameter($table->params);
+				$params->set('show_notice',0);
+				$table->params = $params->toString();
+				$table->store();
+    		}
+    		die();
+    	}
 		if(isset($_POST['get_auto_key'])&&$_POST['get_auto_key']==='yes')
 		{
 			$config =& JFactory::getConfig();
@@ -296,7 +440,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 					        'content'=>http_build_query($data))
 					);
 		    		$context = stream_context_create($opts);
-		    		$result = @file_get_contents("http://moderate.cleantalk.org/api2.0", 0, $context);
+		    		$result = @file_get_contents("https://api.cleantalk.org", 0, $context);
 	    		}
 				
 				if ($result)
@@ -323,6 +467,10 @@ class plgSystemAntispambycleantalk extends JPlugin {
     	$app = JFactory::getApplication();
     	if($app->isAdmin())
     	{
+    		$plugin = JPluginHelper::getPlugin('system', 'antispambycleantalk');
+			$jparam = new JParameter($plugin->params);
+			$show_notice=$jparam->def('show_notice', 0);
+    		
 	    	$document = JFactory::getDocument();
 			$document->addScript(Juri::root()."plugins/system/jquery-1.11.2.min.js");
 			$document->addScriptDeclaration("jQuery.noConflict();");
@@ -344,6 +492,16 @@ class plgSystemAntispambycleantalk extends JPlugin {
 			$jparam = new JParameter($plugin->params);
 			$document->addScriptDeclaration('var ct_user_token="'.$jparam->def('user_token','').'";');
 			$document->addScriptDeclaration('var ct_stat_link="'.JText::_('PLG_SYSTEM_CLEANTALK_STATLINK').'";');
+			
+			if($show_notice==1&&@isset($_SESSION['__default']['user']->id)&&$_SESSION['__default']['user']->id>0)
+			{
+				$document->addScriptDeclaration('var ct_show_feedback=true;');
+				$document->addScriptDeclaration('var ct_show_feedback_mes="'.JText::_('PLG_SYSTEM_CLEANTALK_FEEDBACKLINK').'";');
+			}
+			else
+			{
+				$document->addScriptDeclaration('var ct_show_feedback=false;');
+			}
 		}
 		
         if ($app->isAdmin())

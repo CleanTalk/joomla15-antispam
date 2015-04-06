@@ -75,6 +75,24 @@
 		size="50" 
 		default="" 
 	/>
+	<param name="last_checked" type="hidden" 
+		label="last_checked" 
+		description="last_checked" 
+		size="50" 
+		default="" 
+	/>
+	<param name="last_status" type="hidden" 
+		label="last_status" 
+		description="last_status" 
+		size="50" 
+		default="" 
+	/>
+	<param name="show_notice" type="hidden" 
+		label="show_notice" 
+		description="show_notice" 
+		size="50" 
+		default="" 
+	/>
     <param name="jcomments_unpublished_nofications" type="radio" default="0" 
             label="COM_PLUGINS_JCOMMENTS_NOTIFY_NEW_UNPUBLISHED" description="Show/Hide author copyright.">
         <option value="0">NO</option>
