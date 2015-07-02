@@ -1,4 +1,32 @@
 var close_animate=true;
+function ct_getCookie(name) {
+  var matches = document.cookie.match(new RegExp(
+    "(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"
+  ));
+  return matches ? decodeURIComponent(matches[1]) : undefined;
+}
+function ct_setCookie(name, value)
+{
+	var domain=location.hostname;
+	tmp=domain.split('.');
+	if(tmp[0].toLowerCase()=='www')
+	{
+		tmp[0]='';
+	}
+	else
+	{
+		tmp[0]='.'+tmp[0];
+	}
+	domain=tmp.join('.');
+	
+	document.cookie = name+" =; expires=Thu, 01 Jan 1970 00:00:01 GMT; path = /";
+	document.cookie = name+" =; expires=Thu, 01 Jan 1970 00:00:01 GMT";
+	document.cookie = name+" =; expires=Thu, 01 Jan 1970 00:00:01 GMT; path = /; domain = " +  domain;
+	
+	var date = new Date;
+	date.setDate(date.getDate() + 365);
+	setTimeout(function() { document.cookie = name+"=" + value + "; expires=" + date.toUTCString() + "; path = /;"}, 200)
+}
 function animate_banner(to)
 {
 	if(close_animate)
@@ -30,7 +58,9 @@ jQuery(document).ready(function(){
 		jQuery('#cleantalk_manual_key').attr('href', 'https://cleantalk.org/my?user_token='+ct_user_token);
 		jQuery('#cleantalk_manual_key').html(ct_stat_link);
 	}
-	if(ct_show_feedback)
+	var ct_notice_cookie=ct_getCookie('ct_notice_cookie');
+		
+	if(ct_show_feedback&&ct_notice_cookie==undefined)
 	{
 		if(jQuery('#system-message').length==0)
 		{
@@ -42,7 +72,8 @@ jQuery(document).ready(function(){
 	jQuery('#feedback_notice_close').click(function(){
 		var data = {
 			'ct_delete_notice': 'yes'
-		};		
+		};
+		ct_setCookie('ct_notice_cookie', '1');
 		jQuery.ajax({
 			type: "POST",
 			url: location.href,
@@ -55,6 +86,7 @@ jQuery(document).ready(function(){
 		});
 	});
 	jQuery('#feedback_notice_close').click(function(){
+		ct_setCookie('ct_notice_cookie', '1');
 		animate_banner(0.3);
 	});
 	

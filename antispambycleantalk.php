@@ -3,10 +3,10 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.2
+ * @version 3.3
  * @package Cleantalk
  * @subpackage Joomla
- * @author CleanTalk (welcome@cleantalk.ru) 
+ * @author CleanTalk (welcome@cleantalk.org) 
  * @copyright (C) 2015 Сleantalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  *
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-32';
+    const ENGINE = 'joomla-33';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -388,7 +388,8 @@ class plgSystemAntispambycleantalk extends JPlugin {
     	}
     	if(isset($_POST['ct_delete_notice'])&&$_POST['ct_delete_notice']==='yes')
     	{
-    		$id=$this->getId('system','antispambycleantalk');
+    		/*$id=$this->getId('system','antispambycleantalk');
+    		
     		if($id!==0)
     		{
     			$table = JTable::getInstance( 'plugin');
@@ -397,7 +398,18 @@ class plgSystemAntispambycleantalk extends JPlugin {
 				$params->set('show_notice',0);
 				$table->params = $params->toString();
 				$table->store();
-    		}
+    		}*/
+    		$ct_db=JFactory::getDBO();
+	    	$query="select * from ".$ct_db->_table_prefix."plugins where element='antispambycleantalk' and folder='system' ";
+	    	$ct_db->setQuery($query,0,1);
+	    	$rows=$ct_db->loadObjectList();
+	    	if(sizeof($rows)>0)
+	    	{
+	    		$params=$rows[0]->params;
+	    		$params=str_replace('show_notice=1','show_notice=0',$params);
+	    		$query="update ".$ct_db->_table_prefix."plugins set params='$params' where id=".$rows[0]->id;
+	    		$ct_db->Execute($query);
+	    	}
     		die();
     	}
 		if(isset($_POST['get_auto_key'])&&$_POST['get_auto_key']==='yes')
@@ -1664,18 +1676,26 @@ ctSetCookie("%s", "%s", "%s");
         }
 
         $checkjs_data_post = null; 
-        if (isset($_POST['ct_checkjs'])) {
-            $checkjs_data_post = $_POST['ct_checkjs'];
-        }
+        if (count($_POST) > 0) {
+			foreach ($_POST as $k => $v) {
+				if (preg_match("/^ct_check.*/", $k)) {
+	        		$checkjs_data_post = $v; 
+				}
+			}
+		}
         
-        return $sender_info = array(
+        $config = $this->getCTConfig();
+        
+        $sender_info = array(
             'REFFERRER' => @$_SERVER['HTTP_REFERER'],
             'USER_AGENT' => @$_SERVER['HTTP_USER_AGENT'],
             'direct_post' => $this->ct_direct_post,
             'cookies_enabled' => $this->ct_cookies_test(true), 
             'checkjs_data_post' => $checkjs_data_post, 
             'checkjs_data_cookies' => $checkjs_data_cookies, 
+            'ct_options'=>json_encode($config)
         );
+        return $sender_info;
     }
 
     /**
