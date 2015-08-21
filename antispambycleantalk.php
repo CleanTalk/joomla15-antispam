@@ -854,7 +854,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             }
         }
 
-        if ($contact_email !== null && !$app->isAdmin() &&exceptionMijoShop()){
+        if ($contact_email !== null && !$app->isAdmin() && $this->exceptionMijoShop()){
 
             $result = $this->onSpamCheck(
                 '',
