@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<extension version="2.5" type="plugin" group="system"  method="upgrade" >
+<install version="1.5" type="plugin" group="system" method="upgrade">
     <name>Antispam by CleanTalk</name>
     <author>CleanTalk team</author>
-    <creationDate>24.09.2015</creationDate>
+    <creationDate>21.10.2015</creationDate>
     <copyright>(C) CleanTalk</copyright>
     <license>GNU/GPLv2</license>
     <authorEmail>welcome@cleantalk.org</authorEmail>
     <authorUrl>cleantalk.org</authorUrl>
-    <version>3.5.1</version>
+    <version>3.6</version>
     <description>PLG_CLEANTALK_DESCRIPTION</description>
     <files>
 	<filename plugin="antispambycleantalk">antispambycleantalk.php</filename>
@@ -15,111 +15,78 @@
 	<filename plugin="antispambycleantalk">JSON.php</filename>
 	<filename plugin="antispambycleantalk">cleantalk.js</filename>
 	<filename plugin="antispambycleantalk">jquery-1.11.2.min.js</filename>
-	<filename plugin="antispambycleantalk">preloader.png</filename>
-	<filename plugin="antispambycleantalk">spamfirewall.html</filename>
+	<filename plugin="antispambycleantalk">preloader.gif</filename>
     </files>
-    <languages folder="language">
-	<language tag="en-GB">en-GB/en-GB.plg_system_antispambycleantalk.ini</language>
-	<language tag="en-GB">en-GB/en-GB.plg_system_antispambycleantalk.sys.ini</language>
-	<language tag="ru-RU">ru-RU/ru-RU.plg_system_antispambycleantalk.ini</language>
-	<language tag="ru-RU">ru-RU/ru-RU.plg_system_antispambycleantalk.sys.ini</language>
-    </languages> 
-    <!-- Joomla 1.7+ config -->
-    <config>
-	<fields name="params">
-		<fieldset name="basic">
-			<field name="apikey" type="text" 
-				label="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY" 
-				description="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY_DESC" 
-				size="20" 
-				class="cleantalk_auth_key"
-				default="enter key"
-			/>
-			<field name="myspacer" type="spacer" 
-				label="PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY" 
-				description="" 
-			/>
-            <field name="general_contact_forms_test" type="checkbox" label="COM_PLUGINS_CT_CUSTOM_FORMS" value="1" default="1" />
-            <field name="tell_about_cleantalk" type="checkbox" label="COM_PLUGINS_CT_TELL_ABOUT" value="1" default="0" description="COM_PLUGINS_CT_TELL_ABOUT_DESCRIPTION" />
+    <languages folder="languages">
+	<language tag="en-GB">en-GB.plg_system_antispambycleantalk.ini</language>
+	<language tag="en-GB">en-GB.plg_system_antispambycleantalk.sys.ini</language>
+	<language tag="ru-RU">ru-RU.plg_system_antispambycleantalk.ini</language>
+	<language tag="ru-RU">ru-RU.plg_system_antispambycleantalk.sys.ini</language>
+    </languages>
+    
+    <!-- Joomla 1.5 params -->
+    <params>
+	<param name="groups" type="usergroup" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_LABEL" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_DESC" 
+		size="10"
+		multiple="true" 
+		default="29"
+	/>
+	<param name="apikey" type="text" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_APIKEY_DESC" 
+		size="10" 
+		default="enter key"
+	/>
 
-            <field name="sfw_enable" type="checkbox" label="COM_PLUGINS_CT_SPAM_FIREWALL" value="1" default="0" description="COM_PLUGINS_CT_SPAM_FIREWALL_DESCRIPTION" />
-			<field name="sfw_last_check" type="hidden" 
-				default="0" 
-			/>
-			<field name="sfw_check_interval" type="hidden" 
-				default="86400" 
-			/>
-			<field name="sfw_reload_timeout" type="hidden" 
-				default="3" 
-			/>
-            <field name="pluginhomepage" type="spacer" 
-				label="PLG_SYSTEM_CLEANTALK_PARAM_HOMEPAGE" 
-				description="" 
-			/>
-			<field name="sfw_last_send_log" type="hidden" 
-				default="0" 
-			/>
-			<field name="server" type="hidden" 
-				label="PLG_SYSTEM_CLEANTALK_PARAM_SERVER" 
-				description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 
-				size="50" 
-				default="http://moderate.cleantalk.org" 
-			/>
-			<field name="user_token" type="hidden" 
-				label="user_token" 
-				description="user_token" 
-				size="50" 
-				default="" 
-			/>
-			<field name="last_status" type="hidden" 
-				label="last_status" 
-				description="last_status" 
-				size="50" 
-				default="" 
-			/>
-			<field name="show_notice" type="hidden" 
-				label="show_notice" 
-				description="show_notice" 
-				size="50" 
-				default="" 
-			/>
-			<field name="last_checked" type="hidden" 
-				label="last_checked" 
-				description="last_checked" 
-				size="50" 
-				default="" 
-			/>
-            
-		</fieldset>
-		<fieldset name="jcomments">
-			<field name="groups" type="usergroup" 
-				label="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_LABEL" 
-				description="PLG_SYSTEM_CLEANTALK_PARAM_GROUPS_DESC" 
-				size="10"
-				multiple="true" 
-				default="1"
-			/>
-        
-            <field name="jcomments_unpublished_nofications" type="checkbox" label="COM_PLUGINS_JCOMMENTS_NOTIFY_NEW_UNPUBLISHED" value="0" />
-            <field name="relevance_test" type="checkbox" label="COM_PLUGINS_RELEVANCE_TEST" value="0" />
-			
-		</fieldset>
-	</fields>
-    </config>
-	<administration>
-		<!-- Administration Menu Section -->
-		<menu>Antispam by CleanTalk</menu>
-		<submenu>
-			  <menu view="configuration">COM_CLEANTALK_CONFIGURATION</menu>
-			  <menu view="updates">COM_CLEANTALK_UPDATES</menu>
-		</submenu>
-		<files folder="admin">
-			<!-- Admin Main File Copy Section -->
-			<filename>index.html</filename>
-			<filename>cleantalk.php</filename>
-		</files>
-	</administration>
-	<updateservers>
-		<server type="extension" priority="1" name="CleanTalk Update Site">https://www.cleantalk.org/files/joomla/plugin-updates.xml</server>
-	</updateservers>
-</extension>
+	<param name="myspacer" type="spacer" 
+		label=""
+		default="PLG_SYSTEM_CLEANTALK_PARAM_GETAPIKEY" 
+		description="" 
+	/>
+
+    <param name="general_contact_forms_test" type="radio" default="1" 
+            label="COM_PLUGINS_CT_CUSTOM_FORMS" description="">
+        <option value="0">NO</option>
+        <option value="1">YES</option>
+    </param>
+ 
+	<param name="server" type="hidden" 
+		label="PLG_SYSTEM_CLEANTALK_PARAM_SERVER" 
+		description="PLG_SYSTEM_CLEANTALK_PARAM_SERVER_DESC" 
+		size="50" 
+		default="http://moderate.cleantalk.org" 
+	/>
+	<param name="user_token" type="hidden" 
+		label="user_token" 
+		description="user_token" 
+		size="50" 
+		default="" 
+	/>
+	<param name="last_checked" type="hidden" 
+		label="last_checked" 
+		description="last_checked" 
+		size="50" 
+		default="" 
+	/>
+	<param name="last_status" type="hidden" 
+		label="last_status" 
+		description="last_status" 
+		size="50" 
+		default="" 
+	/>
+	<param name="show_notice" type="hidden" 
+		label="show_notice" 
+		description="show_notice" 
+		size="50" 
+		default="" 
+	/>
+    <param name="jcomments_unpublished_nofications" type="radio" default="0" 
+            label="COM_PLUGINS_JCOMMENTS_NOTIFY_NEW_UNPUBLISHED" description="Show/Hide author copyright.">
+        <option value="0">NO</option>
+        <option value="1">YES</option>
+    </param>
+    </params>
+
+</install>
