@@ -840,7 +840,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $app = JFactory::getApplication();
         if ($app->isAdmin()){
         	$user=JFactory::getUser();
-            if ($this->ct_admin_notices == 0 && (method_exists($user,'authorise') && $user->authorise('core.admin') || method_exists($user,'authorize') && $user->authorize('core.admin'))) {
+            if ($this->ct_admin_notices == 0 && (method_exists($user,'authorise') && $user->authorise('core.admin') || method_exists($user,'authorize') && $user->authorize('com_users', 'manage'))) {
                 $this->ct_admin_notices++;
 		$this->loadLanguage();
                 $config = $this->getCTConfig();
