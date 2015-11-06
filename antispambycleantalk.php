@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.6
+ * @version 3.6.1
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.org) 
@@ -22,7 +22,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-36';
+    const ENGINE = 'joomla-361';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -839,7 +839,8 @@ class plgSystemAntispambycleantalk extends JPlugin {
     public function onAfterDispatch() {
         $app = JFactory::getApplication();
         if ($app->isAdmin()){
-            if ($this->ct_admin_notices == 0 && JFactory::getUser()->authorise('core.admin')) {
+        	$user=JFactory::getUser();
+            if ($this->ct_admin_notices == 0 && (method_exists($user,'authorise') && $user->authorise('core.admin') || method_exists($user,'authorize') && $user->authorize('core.admin'))) {
                 $this->ct_admin_notices++;
 		$this->loadLanguage();
                 $config = $this->getCTConfig();
