@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.6.2
+ * @version 3.7
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.org) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-362';
+    const ENGINE = 'joomla-370';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -143,6 +143,61 @@ class plgSystemAntispambycleantalk extends JPlugin {
     		return true;
     	}
     }
+    
+    /**
+	 * Inner function - Finds and returns pattern in string
+	 * @return null|bool
+	 */
+    function getDataFromSubmit($value = null, $field_name = null) {
+	    if (!$value || !$field_name || !is_string($value)) {
+	        return false;
+	    }
+	    if (preg_match("/[a-z0-9_\-]*" . $field_name. "[a-z0-9_\-]*$/", $value)) {
+	        return true;
+	    }
+	}
+    
+    /*
+	* Get data from submit recursively
+	*/
+	
+	public function getFieldsAny(&$email,&$message,&$nickname,&$subject, &$contact,$arr)
+	{
+		$skip_params = array(
+		    'ipn_track_id', // PayPal IPN #
+		    'txn_type', // PayPal transaction type
+		    'payment_status', // PayPal payment status
+	    );
+		foreach($arr as $key=>$value)
+		{
+			if(!is_array($value)&&!is_object($value))
+			{
+				if (in_array($key, $skip_params) || preg_match("/^ct_checkjs/", $key)) {
+	                $contact = false;
+	            }
+				if ($email === '' && preg_match("/^\S+@\S+\.\S+$/", $value))
+		    	{
+		            $email = $value;
+		        }
+		        else if ($nickname === '' && $this->getDataFromSubmit($value, 'name'))
+		    	{
+		            $nickname = $value;
+		        }
+		        else if ($subject === '' && $this->getDataFromSubmit($value, 'subject'))
+		    	{
+		            $subject = $value;
+		        }
+		        else
+		        {
+		        	$message.="$value\n";
+		        }
+			}
+			else
+			{
+				$this->getFieldsAny($email, $message, $nickname, $subject, $contact, $value);
+			}
+		}
+	}
     
 	public function onExtensionBeforeSave($name, $data)
     {
@@ -833,24 +888,12 @@ class plgSystemAntispambycleantalk extends JPlugin {
             $config = $this->getCTConfig();
 
             if ($config['general_contact_forms_test'] != '' && $do_test) {
-                foreach ($_POST as $v) {
-                    
-                    if ($contact_email) {
-                        continue;
-                    }
-
-                    if (is_array($v)) {
-                        foreach ($v as $v2) {
-                            if ($this->validEmail($v2)) {
-                                $contact_email = $v2;
-                            }
-                        }
-                    } else {
-                        if ($this->validEmail($v)) {
-                            $contact_email = $v;
-                        }
-                    }
-                }
+                $contact_email = '';
+			    $contact_nickname = '';
+			    $subject = '';
+			    $contact_message = '';
+			    $contact_form = true;
+			    $this->getFieldsAny($contact_email, $message, $contact_nickname, $subject, $contact_form, $_POST);
             }
         }
 
@@ -1325,6 +1368,20 @@ class plgSystemAntispambycleantalk extends JPlugin {
 
         // Result should be an associative array 
         $result = json_decode(json_encode($result), true);
+        
+        if(isset($result['errno']) && intval($result['errno'])!=0 && intval($ct_request->js_on)==1)
+        {
+        	$result['allow'] = 1;
+        	$result['errno'] = 0;
+        }
+        if(isset($result['errno']) && intval($result['errno'])!=0 && intval($ct_request->js_on)!=1)
+        {
+        	$result['allow'] = 0;
+        	$result['spam'] = 1;
+        	$result['stop_queue'] = 1;
+        	$result['comment']='Forbidden. Please, enable Javascript.';
+        	$result['errno'] = 0;
+        }
 
         return $result;
     }
