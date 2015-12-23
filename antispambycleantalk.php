@@ -3,7 +3,7 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.7
+ * @version 3.7ю1
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.org) 
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla-370';
+    const ENGINE = 'joomla-371';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -800,7 +800,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
             }
         } else {
             $session->set($this->form_load_label, time());
-            $session->set($this->current_page, JURI::current());
+            $session->set('cleantalk_current_page', JURI::current());
         }
         
         /*
@@ -1055,7 +1055,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
         }
         
         $post_info['comment_type'] = 'jcomments_comment'; 
-        $post_info['post_url'] = $session->get($this->current_page); 
+        $post_info['post_url'] = $session->get('cleantalk_current_page'); 
         $post_info = json_encode($post_info);
         if ($post_info === false) {
             $post_info = '';
@@ -1818,7 +1818,7 @@ ctSetCookie("%s", "%s", "%s");
 
 		// gets 'comment_type' from $data. If not se it will use 'event_message'
 		$post_info['comment_type'] = $obj->get('comment_type','event_message');
-		$post_info['post_url'] = $session->get($this->current_page);
+		$post_info['post_url'] = $session->get('cleantalk_current_page');
 		$post_info = json_encode($post_info);
 		if ($post_info === false) {
 			$post_info = '';
