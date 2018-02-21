@@ -539,7 +539,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 			$show_notice=$jparam->def('show_notice', 0);
     		
 	    	$document = JFactory::getDocument();
-			$document->addScript(Juri::root()."plugins/system/antispambycleantalk/jquery-1.11.2.min.js");
+			$document->addScript(Juri::root()."plugins/system/jquery-1.11.2.min.js");
 			$document->addScriptDeclaration("jQuery.noConflict();");
 			
 			
@@ -553,7 +553,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 			');
 			//$document->addStyleDeclaration('.cleantalk_auto_key{-webkit-border-bottom-left-radius: 5px;-webkit-border-bottom-right-radius: 5px;-webkit-border-radius: 5px;-webkit-border-top-left-radius: 5px;-webkit-border-top-right-radius: 5px;background: #3399FF;border-radius: 5px;box-sizing: border-box;color: #FFFFFF;font: normal normal 400 14px/16.2px "Open Sans";padding:3px;border:0px none;cursor:pointer;}');
 			
-			$document->addScript(Juri::root()."plugins/system/antispambycleantalk/cleantalk.js");
+			$document->addScript(Juri::root()."plugins/system/cleantalk.js");
 			
 			$plugin = JPluginHelper::getPlugin('system', 'antispambycleantalk');
 			$jparam = new JParameter($plugin->params);
