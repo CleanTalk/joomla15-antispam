@@ -3,11 +3,11 @@
 /**
  * CleanTalk joomla plugin
  *
- * @version 3.7.2
+ * @version 3.7.3
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.org) 
- * @copyright (C) 2016 Сleantalk team (http://cleantalk.org)
+ * @copyright (C) 2015 Сleantalk team (http://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  *
  */
@@ -21,7 +21,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
     /**
      * Plugin version string for server
      */
-    const ENGINE = 'joomla15-372';
+    const ENGINE = 'joomla-373';
     
     /**
      * Default value for hidden field ct_checkjs 
@@ -539,7 +539,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 			$show_notice=$jparam->def('show_notice', 0);
     		
 	    	$document = JFactory::getDocument();
-			$document->addScript(Juri::root()."plugins/system/jquery-1.11.2.min.js");
+			$document->addScript(Juri::root()."plugins/system/antispambycleantalk/jquery-1.11.2.min.js");
 			$document->addScriptDeclaration("jQuery.noConflict();");
 			
 			
@@ -553,7 +553,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 			');
 			//$document->addStyleDeclaration('.cleantalk_auto_key{-webkit-border-bottom-left-radius: 5px;-webkit-border-bottom-right-radius: 5px;-webkit-border-radius: 5px;-webkit-border-top-left-radius: 5px;-webkit-border-top-right-radius: 5px;background: #3399FF;border-radius: 5px;box-sizing: border-box;color: #FFFFFF;font: normal normal 400 14px/16.2px "Open Sans";padding:3px;border:0px none;cursor:pointer;}');
 			
-			$document->addScript(Juri::root()."plugins/system/cleantalk.js");
+			$document->addScript(Juri::root()."plugins/system/antispambycleantalk/cleantalk.js");
 			
 			$plugin = JPluginHelper::getPlugin('system', 'antispambycleantalk');
 			$jparam = new JParameter($plugin->params);
@@ -573,7 +573,7 @@ class plgSystemAntispambycleantalk extends JPlugin {
 		
         if ($app->isAdmin())
             return;
-/*
+
         $session = JFactory::getSession();
         $username = $session->get("register_username");
         $email = $session->get("register_email");
@@ -595,7 +595,6 @@ class plgSystemAntispambycleantalk extends JPlugin {
                 $db->query("UPDATE `#__users` SET ct_request_id='" . $ct_request_id . "' WHERE id='" . $user_id . "'");
             }
         }
-*/
     }
 
     /**
@@ -1452,6 +1451,21 @@ class plgSystemAntispambycleantalk extends JPlugin {
         $db = JFactory::getDBO();
         $prefix = $db->getPrefix();
         $arrTables = $db->getTableList();
+
+        $db->setQuery("SHOW COLUMNS FROM `#__users`");
+        $users_columns = $db->loadRowList();
+        $field_presence = false;
+
+        foreach ($users_columns as $column) {
+            if ($column[0] == 'ct_request_id') {
+                $field_presence = true;
+            }
+        }
+
+        if (!$field_presence) {
+            $db->setQuery("ALTER TABLE `#__users` ADD ct_request_id char(32) NOT NULL DEFAULT ''");
+            $db->query();
+        }
 
         if (!empty($arrTables)) {
             if (!in_array($prefix . 'ct_curr_server', $arrTables)) {

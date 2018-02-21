@@ -1,4 +1,3 @@
-joomla15-antispam
-=================
-
-Anti-spam plugin for Joomla 1.5.
+Anti-spam plugin for Joomla 1.5
+============
+Version 3.7.3
