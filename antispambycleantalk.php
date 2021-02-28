@@ -81,7 +81,8 @@ class plgSystemAntispambycleantalk extends JPlugin {
         'com_virtuemart',
         'com_users',
         'com_user',
-        'com_login'
+        'com_login',
+        'com_phocadownload'
     );
 
     /**
