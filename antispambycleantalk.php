@@ -7,7 +7,7 @@
  * @package Cleantalk
  * @subpackage Joomla
  * @author CleanTalk (welcome@cleantalk.org) 
- * @copyright (C) 2016 Сleantalk team (http://cleantalk.org)
+ * @copyright (C) 2016 Сleantalk team (https://cleantalk.org)
  * @license GNU/GPL: http://www.gnu.org/copyleft/gpl.html
  *
  */
